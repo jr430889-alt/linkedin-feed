@@ -32,13 +32,18 @@ def scrape_linkedin_feed():
             text = re.sub(r'^.*?followers.*?LinkedIn\.', '', text, flags=re.IGNORECASE).strip()
             text = re.sub(r'^[^|]*\|[^|]*\|', '', text).strip()
 
-            # Skip if text is too short or looks like metadata
-            if len(text) < 20 or 'Executive Director at' in text or 'followers' in text.lower():
+            # Skip if text is empty or too short
+            if len(text) < 20:
                 continue
 
-            # Only include Bluedot Environmental posts (filter by title or content)
+            # Skip job titles and other metadata-only posts
+            if text.startswith('Executive Director at') or text.startswith('Senior') or text.startswith('Manager at'):
+                continue
+
+            # Only include posts where title mentions Bluedot (but be more lenient)
             title = item.get('title', '')
-            if 'Bluedot Environmental' not in title:
+            # Accept if Bluedot is mentioned OR if it's from the feed (SimpleFeedMaker already filters by company)
+            if 'Bluedot' not in title and 'Bluedot' not in text:
                 continue
 
             # Check for images (exclude logos)
