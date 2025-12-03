@@ -20,30 +20,35 @@ def scrape_linkedin_feed():
         # Filter and clean posts
         cleaned_items = []
 
-        for item in data.get('items', [])[:10]:  # Get max 10 posts
+        for item in data.get('items', [])[:15]:  # Get max 15 posts to filter from
             # Get text content
             text = item.get('content_text', '') or item.get('summary', '') or item.get('title', '')
 
             # Clean metadata - remove company info, follower counts
             text = text.strip()
 
-            # Remove patterns like "Company Name | 299 followers | "
-            text = re.sub(r'^.*?\d+\s+followers.*?\|.*?\|', '', text, flags=re.IGNORECASE).strip()
+            # Remove metadata patterns more aggressively
+            # Pattern: "Bluedot Environmental Ltd.299 followers2wReport this post"
+            text = re.sub(r'^.*?Ltd\..*?followers.*?Report this post', '', text, flags=re.IGNORECASE).strip()
+            text = re.sub(r'^.*?Environmental.*?\d+\s*followers.*?Report this post', '', text, flags=re.IGNORECASE).strip()
+
+            # Remove other common patterns
+            text = re.sub(r'^.*?\d+\s+followers\d+[wdhm]', '', text, flags=re.IGNORECASE).strip()
+            text = re.sub(r'^.*?followers.*?\|.*?\|', '', text, flags=re.IGNORECASE).strip()
             text = re.sub(r'^.*?followers.*?LinkedIn\.', '', text, flags=re.IGNORECASE).strip()
             text = re.sub(r'^[^|]*\|[^|]*\|', '', text).strip()
+            text = re.sub(r'^Report this post', '', text, flags=re.IGNORECASE).strip()
 
             # Skip if text is empty or too short
-            if len(text) < 20:
+            if len(text) < 30:
                 continue
 
             # Skip job titles and other metadata-only posts
             if text.startswith('Executive Director at') or text.startswith('Senior') or text.startswith('Manager at'):
                 continue
 
-            # Only include posts where title mentions Bluedot (but be more lenient)
-            title = item.get('title', '')
-            # Accept if Bluedot is mentioned OR if it's from the feed (SimpleFeedMaker already filters by company)
-            if 'Bluedot' not in title and 'Bluedot' not in text:
+            # Skip if it's ONLY metadata (no actual content)
+            if re.match(r'^[^a-zA-Z]*\d+\s*followers', text, flags=re.IGNORECASE):
                 continue
 
             # Check for images (exclude logos)
@@ -63,6 +68,10 @@ def scrape_linkedin_feed():
             }
 
             cleaned_items.append(cleaned_item)
+
+            # Stop after we have 10 good posts
+            if len(cleaned_items) >= 10:
+                break
 
         # Create clean feed
         output = {
