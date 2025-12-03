@@ -1,0 +1,8 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "Bluedot Environmental - LinkedIn Feed",
+  "home_page_url": "https://www.linkedin.com/company/bluedot-environmental-ltd",
+  "feed_url": "https://raw.githubusercontent.com/YOUR_USERNAME/linkedin-feed/main/feed.json",
+  "description": "Latest updates from Bluedot Environmental on LinkedIn",
+  "items": []
+}
