@@ -2,47 +2,15 @@
   "version": "https://jsonfeed.org/version/1.1",
   "title": "Bluedot Environmental - LinkedIn Feed",
   "home_page_url": "https://www.linkedin.com/company/bluedot-environmental-ltd",
-  "feed_url": "https://raw.githubusercontent.com/YOUR_USERNAME/linkedin-feed/main/feed.json",
+  "feed_url": "https://raw.githubusercontent.com/jr430889-alt/linkedin-feed/main/feed.json",
   "description": "Latest updates from Bluedot Environmental on LinkedIn",
   "items": [
     {
-      "id": "https://ca.linkedin.com/company/bluedot-environmental-ltd?trk=organization_guest_main-feed-card_feed-actor-name",
-      "url": "https://ca.linkedin.com/company/bluedot-environmental-ltd?trk=organization_guest_main-feed-card_feed-actor-name",
+      "id": "placeholder",
+      "url": "https://www.linkedin.com/company/bluedot-environmental-ltd",
       "title": "Bluedot Environmental Update",
-      "content_text": "It’s been a big week for tidal here at#MRC2025! First, the announcement thatOrbital Marine Power Ltdwon two more berths at FORCE, and then news that the Fisheries Act Authorization has been obtained, the first tidal permit issued in 8 years. Team work makes the dream work and we are so proud to be a part of this phenomenal team.Orbital Mari…",
-      "date_published": "2025-12-03T11:32:36.756226",
-      "image": null
-    },
-    {
-      "id": "https://uk.linkedin.com/company/orbital-marine-power-ltd?trk=organization_guest_main-feed-card-text",
-      "url": "https://uk.linkedin.com/company/orbital-marine-power-ltd?trk=organization_guest_main-feed-card-text",
-      "title": "Bluedot Environmental Update",
-      "content_text": "Our Senior Operations Engineer, Thomas, Tam as he’s affectionately known to us, got so much more than a degree when he moved from France to Orkney to study atHeriot-Watt University. We’re delighted that he decided to stay when his studies ended, and that he chose to build his future here in Scotland. Check out his story 👇Brand Scotland6,53…",
-      "date_published": "2022-08-04T00:00:00+00:00",
-      "image": null
-    },
-    {
-      "id": "https://uk.linkedin.com/company/orbital-marine-power-ltd?trk=organization_guest_main-feed-card_reshare_feed-actor-name",
-      "url": "https://uk.linkedin.com/company/orbital-marine-power-ltd?trk=organization_guest_main-feed-card_reshare_feed-actor-name",
-      "title": "Bluedot Environmental Update",
-      "content_text": "Our Senior Operations Engineer, Thomas, Tam as he’s affectionately known to us, got so much more than a degree when he moved from France to Orkney to study atHeriot-Watt University. We’re delighted that he decided to stay when his studies ended, and that he chose to build his future here in Scotland. Check out his story 👇Brand Scotland6,53…",
-      "date_published": "2022-08-04T00:00:00+00:00",
-      "image": null
-    },
-    {
-      "id": "https://ca.linkedin.com/company/fundy-ocean-research-centre-for-energy?trk=organization_guest_main-feed-card_reshare-text",
-      "url": "https://ca.linkedin.com/company/fundy-ocean-research-centre-for-energy?trk=organization_guest_main-feed-card_reshare-text",
-      "title": "Bluedot Environmental Update",
-      "content_text": "🌊 FORCE is hiring: Technical Project Manager Are you ready to shape the next chapter in tidal energy innovation? With new momentum, world-leading tidal technologies on the horizon, and growing collaboration across the marine renewable sector, there’s never been a more exciting time to be part of the FORCE team. As the …",
-      "date_published": "2025-12-03T11:32:36.756405",
-      "image": null
-    },
-    {
-      "id": "https://ca.linkedin.com/company/confederacy-of-mainland-mi'kmaq?trk=organization_guest_main-feed-card_reshare-text",
-      "url": "https://ca.linkedin.com/company/confederacy-of-mainland-mi'kmaq?trk=organization_guest_main-feed-card_reshare-text",
-      "title": "Bluedot Environmental Update",
-      "content_text": "The Confederacy of Mainland Mi'kmaq",
-      "date_published": "2025-12-03T11:32:36.756462",
+      "content_text": "Unable to fetch LinkedIn posts. Please visit our LinkedIn page for the latest updates.",
+      "date_published": "2025-12-03T11:39:02.695375",
       "image": null
     }
   ]
