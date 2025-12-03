@@ -5,115 +5,104 @@ import re
 
 def scrape_linkedin_feed():
     """
-    Scrapes LinkedIn company page directly and generates a clean JSON feed.
-    Uses LinkedIn's public RSS endpoint (if available) or web scraping.
+    Uses SimpleFeedMaker but with MUCH better filtering and cleaning.
+    Only keeps posts that are actually FROM Bluedot Environmental.
     """
 
-    # LinkedIn company URL
-    linkedin_company_url = "https://www.linkedin.com/company/bluedot-environmental-ltd"
-
-    # Try LinkedIn's RSS feed endpoint first
-    # Note: LinkedIn removed public RSS feeds, so we'll use a workaround
-    # We'll fetch the public company page HTML and parse it
+    # Source feed URL from SimpleFeedMaker
+    source_url = "https://simplefeedmaker.com/feeds/ebd69ced1b67c454dfb039862cd2f1ab.json"
 
     try:
-        # Set up headers to mimic a browser
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-
-        req = urllib.request.Request(
-            f"{linkedin_company_url}/posts/",
-            headers=headers
-        )
-
-        with urllib.request.urlopen(req, timeout=10) as response:
-            html = response.read().decode('utf-8')
-
-        # Parse posts from HTML
-        # LinkedIn uses JSON-LD structured data in script tags
-        posts = []
-
-        # Look for script tags with type="application/ld+json"
-        json_ld_pattern = r'<script type="application/ld\+json">(.*?)</script>'
-        matches = re.findall(json_ld_pattern, html, re.DOTALL)
-
-        for match in matches:
-            try:
-                data = json.loads(match)
-                if isinstance(data, dict) and data.get('@type') == 'Organization':
-                    # Found organization data, but posts are not in structured data
-                    pass
-            except:
-                continue
-
-        # Alternative: Look for posts in the HTML using regex
-        # This is fragile but works for public pages
-
-        # Pattern to find post text (this is approximate and may need adjustment)
-        post_pattern = r'<div[^>]*class="[^"]*feed-shared-update-v2__description[^"]*"[^>]*>(.*?)</div>'
-        post_matches = re.findall(post_pattern, html, re.DOTALL | re.IGNORECASE)
+        # Fetch the source feed
+        with urllib.request.urlopen(source_url) as response:
+            data = json.loads(response.read().decode())
 
         cleaned_items = []
 
-        for idx, post_html in enumerate(post_matches[:10]):
-            # Clean HTML tags
-            text = re.sub(r'<[^>]+>', '', post_html)
+        for item in data.get('items', []):
+            # Get title to check which company posted
+            title = item.get('title', '')
+
+            # ONLY accept posts where the title is "Bluedot Environmental Ltd." or similar
+            if 'Bluedot Environmental' not in title:
+                print(f"⏭️  Skipping post from: {title}")
+                continue
+
+            # Get text content
+            text = item.get('content_text', '') or item.get('summary', '') or item.get('title', '')
             text = text.strip()
 
-            # Decode HTML entities
-            text = text.replace('&amp;', '&')
-            text = text.replace('&lt;', '<')
-            text = text.replace('&gt;', '>')
-            text = text.replace('&quot;', '"')
-            text = text.replace('&#39;', "'")
-            text = text.replace('&nbsp;', ' ')
+            # Aggressively remove ALL metadata patterns
+            # Pattern: "Bluedot Environmental Ltd.299 followers2wReport this post"
+            original_text = text
 
-            # Remove extra whitespace
-            text = re.sub(r'\s+', ' ', text).strip()
+            # Remove company name and follower count at start
+            text = re.sub(r'^Bluedot Environmental Ltd\.', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'^\d+\s*followers', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'^\d+[wdhm]', '', text)  # Remove time indicators like "2w", "1d"
+            text = re.sub(r'^Report this post', '', text, flags=re.IGNORECASE)
 
-            # Skip if too short
+            # Remove any remaining leading metadata
+            text = re.sub(r'^[^a-zA-Z]*', '', text)  # Remove leading non-letters
+            text = text.strip()
+
+            # Skip if text is too short after cleaning
             if len(text) < 30:
+                print(f"⏭️  Skipping short post: {text[:50]}")
                 continue
 
-            # Skip metadata patterns
-            if re.match(r'^\d+\s*followers', text, re.IGNORECASE):
+            # Skip if it's a job posting or metadata-only
+            skip_patterns = [
+                r'^Executive Director at',
+                r'^Senior .* at',
+                r'^Manager at',
+                r'^\d+\s*followers'
+            ]
+
+            should_skip = False
+            for pattern in skip_patterns:
+                if re.match(pattern, text, re.IGNORECASE):
+                    should_skip = True
+                    break
+
+            if should_skip:
+                print(f"⏭️  Skipping metadata post: {text[:50]}")
                 continue
+
+            # Get URL
+            url = item.get('url', 'https://www.linkedin.com/company/bluedot-environmental-ltd')
+
+            # Get date
+            date_str = item.get('date_published', datetime.now().isoformat())
+
+            # Check for images (no logos)
+            image_url = None
+            if item.get('image'):
+                img = item['image'].lower()
+                if not any(x in img for x in ['company-logo', '_200_200', '_100_100', 'logo', 'profile']):
+                    image_url = item['image']
 
             cleaned_item = {
-                'id': f"post-{idx}",
-                'url': f"{linkedin_company_url}/posts/",
+                'id': item.get('id', f"post-{len(cleaned_items)}"),
+                'url': url,
                 'title': 'Bluedot Environmental Update',
                 'content_text': text,
-                'date_published': datetime.now().isoformat(),
-                'image': None  # Images would require more complex parsing
+                'date_published': date_str,
+                'image': image_url
             }
 
             cleaned_items.append(cleaned_item)
+            print(f"✅ Added post: {text[:80]}...")
 
+            # Stop after we have 10 good posts
             if len(cleaned_items) >= 10:
                 break
 
-        # If we didn't find posts via scraping, create a fallback message
-        if len(cleaned_items) == 0:
-            print("⚠️  Could not scrape posts directly from LinkedIn")
-            print("LinkedIn's public pages are difficult to scrape without authentication")
-            print("Creating a placeholder feed...")
-
-            cleaned_items = [{
-                'id': 'placeholder',
-                'url': linkedin_company_url,
-                'title': 'Bluedot Environmental Update',
-                'content_text': 'Unable to fetch LinkedIn posts. Please visit our LinkedIn page for the latest updates.',
-                'date_published': datetime.now().isoformat(),
-                'image': None
-            }]
-
-        # Create feed
+        # Create clean feed
         output = {
             'version': 'https://jsonfeed.org/version/1.1',
             'title': 'Bluedot Environmental - LinkedIn Feed',
-            'home_page_url': linkedin_company_url,
+            'home_page_url': 'https://www.linkedin.com/company/bluedot-environmental-ltd',
             'feed_url': 'https://raw.githubusercontent.com/jr430889-alt/linkedin-feed/main/feed.json',
             'description': 'Latest updates from Bluedot Environmental on LinkedIn',
             'items': cleaned_items
@@ -123,34 +112,13 @@ def scrape_linkedin_feed():
         with open('feed.json', 'w', encoding='utf-8') as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
 
-        print(f"✅ Successfully generated feed with {len(cleaned_items)} posts")
+        print(f"\n✅ Successfully generated feed with {len(cleaned_items)} posts")
         return True
 
     except Exception as e:
         print(f"❌ Error: {e}")
-        print("\n⚠️  Direct LinkedIn scraping failed. This is expected - LinkedIn blocks most scrapers.")
-        print("Recommendation: Use RSS.app ($8-10/month) or keep using SimpleFeedMaker with better filtering.")
-
-        # Create error feed
-        output = {
-            'version': 'https://jsonfeed.org/version/1.1',
-            'title': 'Bluedot Environmental - LinkedIn Feed',
-            'home_page_url': 'https://www.linkedin.com/company/bluedot-environmental-ltd',
-            'feed_url': 'https://raw.githubusercontent.com/jr430889-alt/linkedin-feed/main/feed.json',
-            'description': 'Latest updates from Bluedot Environmental on LinkedIn',
-            'items': [{
-                'id': 'error',
-                'url': 'https://www.linkedin.com/company/bluedot-environmental-ltd',
-                'title': 'Feed Error',
-                'content_text': 'Unable to fetch LinkedIn posts directly. LinkedIn blocks automated scraping.',
-                'date_published': datetime.now().isoformat(),
-                'image': None
-            }]
-        }
-
-        with open('feed.json', 'w', encoding='utf-8') as f:
-            json.dump(output, f, indent=2, ensure_ascii=False)
-
+        import traceback
+        traceback.print_exc()
         return False
 
 if __name__ == '__main__':
